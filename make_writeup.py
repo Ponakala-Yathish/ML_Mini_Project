@@ -43,15 +43,16 @@ sup_tab = table(rows, [46*mm, 15*mm, 16*mm, 24*mm, 17*mm, 24*mm, 22*mm, 15*mm])
 
 rows = [["Clustering (pulsars only)", "Features", "#clusters", "Silhouette"]]
 for tag in ("raw", "standardized"):
-    r = U["runs"][tag]
-    rows.append(["K-means (k=3)", tag, "3", f"{r['kmeans']['silhouette']:.2f}"])
-    s = r["som"]["silhouette"]
-    rows.append(["SOM (5x5 map)", tag, str(r["som"]["n_clusters"]), "n/a" if s is None else f"{s:.2f}"])
+    if tag in U["runs"]:
+        r = U["runs"][tag]
+        rows.append(["K-means (k=3)", tag, "3", f"{r['kmeans']['silhouette']:.2f}"])
+        s = r["som"]["silhouette"]
+        rows.append(["SOM (5x5 map)", tag, str(r["som"]["n_clusters"]), "n/a" if s is None else f"{s:.2f}"])
 uns_tab = table(rows, [48*mm, 30*mm, 22*mm, 22*mm])
 
 best = max(M, key=lambda n: M[n]["test_at_tuned_threshold"]["recall"])
 sk, sc, g = M["Random Forest (scikit-learn)"], M["Random Forest (from scratch)"], M["GDA (baseline)"]
-kbest = max((U["runs"][t]["kmeans"]["silhouette"], t) for t in U["runs"])
+kbest = max((U["runs"][t]["kmeans"]["silhouette"], t) for t in U["runs"] if "kmeans" in U["runs"][t])
 conc = (f"<b>Supervised.</b> On the held-out test set, {best} achieved the highest recall ({pc(M[best]['test_at_tuned_threshold']['recall'])}) "
         f"at its cross-validated threshold. The tuned scikit-learn Random Forest reached {pc(sk['test_at_tuned_threshold']['recall'])} recall / "
         f"{sk['test_at_tuned_threshold']['roc_auc']:.3f} AUC versus {pc(g['test_at_tuned_threshold']['recall'])} / {g['test_at_tuned_threshold']['roc_auc']:.3f} "
