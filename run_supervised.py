@@ -82,7 +82,9 @@ def train_models(Xtr, ytr, demo=False, quick=False):
 
     if demo:
         best = PAPER_RF_PARAMS.copy()
+        print("  Using paper hyperparameters for RF (sklearn)")
     else:
+        print("  Hyperparameter search for RF (sklearn)...")
         n_iter = 3 if quick else 12
         grid = dict(
             n_estimators=[20] if quick else [100, 200, 300],
@@ -96,6 +98,7 @@ def train_models(Xtr, ytr, demo=False, quick=False):
             auc = mean_folds(folds)["roc_auc"]
             if auc > best_auc:
                 best, best_auc = prm, auc
+        print(f"  Best params: {best}")
 
     factories = {
         "GDA (baseline)": lambda: GDA(),
@@ -110,11 +113,13 @@ def train_models(Xtr, ytr, demo=False, quick=False):
 
     models = {}
     for name, fac in factories.items():
+        print(f"  Training {name} (5-fold CV)...")
         oof, folds, _ = cv_oof(fac, Xtr, ytr)
         thr = best_threshold(ytr, oof)
         Xu, yu = data.upsample(Xtr, ytr, rng)
         model = fac().fit(Xu, yu)
         models[name] = {"model": model, "threshold": thr}
+        print(f"    done — threshold={thr:.4f}")
 
     return models
 
